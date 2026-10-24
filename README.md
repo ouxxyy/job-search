@@ -1,5 +1,7 @@
 # Job Search｜求职岗位筛选与招聘信息整理 Agent Skill
 
+[![AgentShield Security](https://merx.help/badge/A+.svg)](https://merx.help/shield)
+
 **把求职条件，整理成一份有来源、有理由、能逐条核实的投递短名单。**
 
 找工作时，麻烦的往往不是搜不到岗位，而是开了几个招聘网站，仍要一条条比薪资、看发布日期、记下哪里还缺信息。我做了这个 Skill，让 Agent 按你确认的条件去找，把结果放进同一份 HTML 和 Excel。你决定投哪些，它不会代投或联系 HR。
