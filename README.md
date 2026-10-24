@@ -10,6 +10,9 @@
 
 上图由程序自带的虚构数据生成，演示报告筛选、来源核实和本地标记；不是实时招聘结果，也不表示已找到 25 个岗位。
 
+> [!TIP]
+> 🎁 扫码关注公众号「欧八同学」，免费领取 AI 案例与 Skill《大厂产品AI经验编程 200 套》→ [去扫码](#author)
+
 [使用示例](#quick-example) · [开始使用](#quick-start) · [English](#english-overview)
 
 <a id="quick-example"></a>
@@ -176,12 +179,15 @@ See [installation](#quick-start). Python 3.10+ and Tabbit's stable CLI are requi
 
 - [选好岗位后对照 JD 检查简历](https://github.com/ouxxyy/jd-resume-match)
 - [进一步核查目标公司](https://github.com/ouxxyy/sherlock-company)
+- 全部项目与作者主页：[github.com/ouxxyy](https://github.com/ouxxyy)
+
+<a id="author"></a>
 
 ## 作者
 
 我是**欧八同学**，全平台同名。[联系我](https://albertou.redboook.cn/)。
 
-- 微信公众号：扫码关注
+- 微信公众号：扫码关注，免费领取 AI 案例与 Skill《大厂产品AI经验编程 200 套》，免费领取 AI 案例与 Skill《大厂产品AI经验编程 200 套》
 - 抖音：[搜索“欧八同学”](https://www.douyin.com/search/%E6%AC%A7%E5%85%AB%E5%90%8C%E5%AD%A6)
 - 小红书：[搜索“欧八同学”](https://www.xiaohongshu.com/search_result?keyword=%E6%AC%A7%E5%85%AB%E5%90%8C%E5%AD%A6)
 - X：[搜索“欧八同学”](https://x.com/search?q=%E6%AC%A7%E5%85%AB%E5%90%8C%E5%AD%A6&src=typed_query)
@@ -189,6 +195,8 @@ See [installation](#quick-start). Python 3.10+ and Tabbit's stable CLI are requi
 <p align="center">
   <img src="assets/wechat-qr.jpg" alt="欧八同学微信公众号二维码" width="260">
 </p>
+
+<p align="center"><sub>扫码关注「欧八同学」，免费领取《大厂产品AI经验编程 200 套》</sub></p>
 
 如果它帮你少做了一些重复整理，欢迎点个 Star。遇到问题可以[提 Issue](https://github.com/ouxxyy/job-search/issues)，附命令、脱敏报错和最小复现步骤；请别上传简历、Cookie、联系方式或私人求职清单。
 
