@@ -1,4 +1,4 @@
-# Job Search｜求职岗位筛选与招聘信息整理 Agent Skill
+# AI岗位搜索大师（job-search）｜求职岗位筛选与招聘信息整理 Agent Skill
 
 **把求职条件，整理成一份有来源、有理由、能逐条核实的投递短名单。**
 
@@ -169,7 +169,7 @@ See [installation](#quick-start). Python 3.10+ and Tabbit's stable CLI are requi
 
 ## 改名与兼容
 
-项目原名 Job Scout，现统一使用 **Job Search / job-search**。GitHub 旧地址保留跳转；新安装使用 `skills/job-search` 和 `job_search.py`。
+项目原名 Job Scout，现统一使用 **Job Search / job-search**，对外中文名 **AI岗位搜索大师**。GitHub 旧地址保留跳转；新安装使用 `skills/job-search` 和 `job_search.py`。
 
 已有脚本仍可运行 `job_scout.py`，若移动已有源码目录，请保留旧路径软链接或重建虚拟环境。内部 `jobscout` 模块、`JOB_SCOUT_STATE_DIR`、锁目录与报告本地标记键保持兼容，不需要移动既有求职结果。旧技能入口请重新安装或重载为 `job-search`；安装器只清理指向同一源码的旧软链接，不删除旧的真实目录。
 
