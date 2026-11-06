@@ -72,3 +72,14 @@
 报告输出 `jobs.html`、`jobs.xlsx`、`jobs.json`、`jobs.jsonl`、`summary.json`、`plan.json` 和 `next-actions.json/md`。默认 CLI 回执保持精简；确需完整元数据时使用 `--verbose`。
 
 退出码：`0` 表示命令成功且无待处理事项（离线 demo / plan 等除外）；`2` 表示参数、依赖或传输错误；`3` 表示登录等待、界面待办或平台覆盖缺口。退出码 3 也会保留已取得的结果。
+
+## 地区与渠道路线（v0.3.0）
+
+`plan` 自动在计划旁写出 `*.routes.json`。新计划默认六渠道（增加本地宝），已有显式平台清单不变。另可仅生成路线：
+
+```bash
+python job_search.py plan --input examples/local-plan.json --out /tmp/job-search-local/plan.json
+python job_search.py routes --plan /tmp/job-search-local/plan.json --out /tmp/job-search-local/routes.json
+```
+
+这两条命令不联网、不启动浏览器。每个关键词×城市保留独立路线；城市入口、站内发现查询和待核对事项均在 JSON 中。`scan` 仍需用户确认，新增渠道由 Agent 根据实际页面完成 guided 流程。

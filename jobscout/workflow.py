@@ -1,6 +1,7 @@
 """Per-platform completion contract shared by CLI, reports and the skill agent."""
 from .core import PLATFORMS, safe_url, target_count
 from collections import Counter
+from .sources import query_routes
 
 
 def browser_budget(plan, state):
@@ -26,16 +27,23 @@ def browser_budget(plan, state):
 def collection_step(plan, state, mine):
     """Choose the next useful bounded operation from existing evidence."""
     budget = browser_budget(plan, state)
-    visited = {safe_url(u) for u in state.get('detail_urls', [])}
+    visited = {safe_url(u) for u in state.get('detail_urls', []) + state.get('original_detail_urls', [])}
     # Strict unknown-policy exclusions can still be verified; known hard
     # failures cannot. Deduplicate links even when a source supplies two IDs.
     unresolved = [j for j in mine if j.get('unknowns') and not j.get('rejections')]
-    candidates = [j for j in unresolved if safe_url(j.get('link'), j['platform'])
-                  and safe_url(j['link']) not in visited]
+    candidates = []
+    for j in unresolved:
+        links = [('platform', safe_url(j.get('link'), j['platform']))]
+        if j.get('source_kind') == 'announcement':
+            links.insert(0, ('original', safe_url(j.get('original_url'))))
+        for kind, url in links:
+            if url and url not in visited:
+                candidates.append({**j, '_detail_url':url, '_detail_kind':kind})
+                break
     candidates.sort(key=lambda j: (-j.get('score', 0), len(j.get('unknowns', [])), j.get('key', '')))
     unique = {}
     for j in candidates:
-        unique.setdefault(safe_url(j['link']), j)
+        unique.setdefault(j['_detail_url'], j)
     candidates = list(unique.values())
     pages, details = budget['pages'], budget['details']
     stop = state.get('stop_reason')
@@ -66,7 +74,7 @@ def collection_step(plan, state, mine):
     gaps = Counter(u for j in unresolved for u in j.get('unknowns', []))
     if gaps:
         usage += '主要缺证：' + '；'.join(f'{u}（{n} 条）' for u, n in gaps.most_common(3)) + '。'
-    queue = [{'key': j.get('key'), 'title': j['title'], 'url': j['link'], 'unknowns': j.get('unknowns', [])}
+    queue = [{'key': j.get('key'), 'title': j['title'], 'url': j['_detail_url'], 'source':j['_detail_kind'], 'unknowns': j.get('unknowns', [])}
              for j in candidates[:min(5, details['remaining']) if details['remaining'] is not None else 5]]
     return action, message + usage, budget, queue
 
@@ -89,6 +97,9 @@ def platform_progress(plan, jobs, statuses):
         missing = max(0, target - qualified)
         status = state.get('status', 'not_scanned')
         url = safe_url(state.get('loginLink'), key) or safe_url(state.get('url'), key) or PLATFORMS[key]['home']
+        routes = query_routes(plan, key)
+        if key == 'bendibao' and state.get('url', '') in ('', PLATFORMS[key]['home']):
+            url = routes[0]['entry_url']
         budget, detail_queue = browser_budget(plan, state), []
         if status == 'skipped' and state.get('note'):
             action, message = 'shortfall', '用户明确跳过此平台：' + state['note']
@@ -127,7 +138,7 @@ def platform_progress(plan, jobs, statuses):
         rows.append({'platform':key, 'name':PLATFORMS[key]['name'], 'target':target,
                      'qualified':qualified, 'review':review, 'missing':missing, 'status':status,
                      'action':action, 'message':message, 'url':url,
-                     'budget':budget, 'detail_queue':detail_queue})
+                     'budget':budget, 'detail_queue':detail_queue, 'search_routes':routes})
     return rows
 
 

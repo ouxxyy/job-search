@@ -37,6 +37,11 @@ def write_report(jobs, plan, statuses, out, demo=False):
         raise RuntimeError('缺少 openpyxl。HTML/JSON 已保存；运行 pip install -r requirements.txt 后重新生成 Excel。')
     wb=Workbook(); wb.remove(wb.active)
     cols=[('title','岗位'),('company','公司'),('salary_display','薪资原文'),('city','城市'),('experience','经验'),('degree','学历'),('score','排序分（非录用概率）'),('publish_time','发布时间'),('refresh_time','刷新时间'),('hr_active','HR 活跃'),('hr_reply','回复原文'),('platform','平台'),('score_reasons','投递理由'),('unknowns','待核实'),('rejections','排除原因'),('link','岗位链接'),('source_url','来源页'),('captured_at','采集时间')]
+    cols += [('source_kind','来源类型'),('source_publish_time','转载页面发布时间'),
+             ('recruitment_status','招聘状态'),('recruitment_evidence','招聘状态依据'),
+             ('deadline','截止时间原文'),('deadline_at','截止时间标准值'),
+             ('original_url','原始公告'),('original_captured_at','原公告采集时间'),
+             ('original_evidence','原公告依据'),('eligibility_status','报考资格状态'),('eligibility_evidence','资格对照依据')]
     for bucket,title in [('shortlist','优先投递'),('review','待核实'),('reserve','备选'),('excluded','已排除')]:
         ws=wb.create_sheet(title); ws.append([label for _,label in cols])
         for j in jobs:
@@ -46,8 +51,9 @@ def write_report(jobs, plan, statuses, out, demo=False):
                 val=j.get(key,'')
                 values.append(val if isinstance(val,(int,float)) else spreadsheet_text('；'.join(val) if isinstance(val,list) else val))
             ws.append(values)
-            for col,key in [(16,'link'),(17,'source_url')]:
-                if j[key]: ws.cell(ws.max_row,col).hyperlink=j[key]
+            for col,(key,_) in enumerate(cols,1):
+                if key in ('link','source_url','original_url') and j.get(key):
+                    ws.cell(ws.max_row,col).hyperlink=j[key]
         ws.freeze_panes='A2';ws.auto_filter.ref=ws.dimensions
         for c in ws[1]:
             c.font=Font(bold=True,color='FFFFFF');c.fill=PatternFill('solid',fgColor='244E43')

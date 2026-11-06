@@ -1,0 +1,12 @@
+{
+  "mode": "custom",
+  "keywords": ["电工"],
+  "cities": ["苏州"],
+  "platforms": ["bendibao", "public_jobs", "guopin"],
+  "jobs_per_platform": 5,
+  "salary_min_k": null,
+  "salary_max_k": null,
+  "fresh_days": 60,
+  "require_active": false,
+  "unknown_policy": "review"
+}

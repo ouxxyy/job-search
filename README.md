@@ -55,7 +55,7 @@
 3. 先检查 Tabbit 已有标签，复用可用的求职页面；确实遇到登录墙或验证码，再请你操作。
 4. 逐个平台搜索并核实证据，生成报告，说明没有完成的部分。
 
-默认搜索 BOSS直聘、猎聘、脉脉、智联招聘、前程无忧，目标是**每个平台 5 个符合条件的岗位**。也可以指定每个平台 10 个，或给各平台不同数量。目标不等于承诺：缺少发布日期、薪资不完整的岗位会进入“待核实”，不拿来凑数。
+新计划默认搜索 BOSS直聘、猎聘、脉脉、智联招聘、前程无忧及目标地区本地宝，目标是**每个平台 5 个符合条件的岗位，共 30 个**。也可以指定每个平台 10 个，或给各平台不同数量。目标不等于承诺：缺少发布日期、薪资不完整的岗位会进入“待核实”，不拿来凑数。
 
 <a id="quick-start"></a>
 
@@ -98,6 +98,10 @@ py -3 -m venv .venv
 
 > 用 job-search 帮我找上海财务分析师，月薪 15–30K，近两个月发布，每个平台 5 个。先列筛选条件让我确认，再用 Tabbit 搜索，给我 HTML 和 Excel 投递短名单。
 
+也可以明确补充当地和公共渠道：
+
+> 帮我找苏州电工，查苏州本地宝、中国公共招聘网和国聘，各 5 个。岗位工作地点必须在苏州；招聘公告请核实原文、报名截止和资格，已经截止的排除。
+
 也可以带上简历：
 
 > 根据这份简历帮我找采购岗位。其他适合的方向可以建议，但我确认后才能加入搜索。不要帮我投递。
@@ -118,6 +122,8 @@ py -3 -m venv .venv
 |---|---|
 | BOSS直聘、猎聘 | 通过 Tabbit 读取正常页面产生的响应；页面变化时可转由 Agent 操作界面 |
 | 脉脉、智联招聘、前程无忧 | Agent 用 Tabbit 操作实际搜索控件、整理证据，汇入同一报告 |
+| 本地宝 | 按用户期望地区定位城市站，Agent 检索职位及招聘公告，回溯原始来源和报名期限 |
+| 国聘、中国公共招聘网、国家大学生就业服务平台 | 按国企、公服就业、应届等场景确认后，Agent 检索并核验资格 |
 | 鱼泡直聘、实习僧 | 按岗位场景补充，经用户确认后走界面流程 |
 
 单独运行 Python 时，需要界面操作的平台会返回 `guided_pending`。Agent 要继续处理 `next-actions.json`，不能把这当成搜索结束。脉脉部分功能可能需要 App；账号权限、验证码和平台改版都可能影响覆盖，报告会保留缺口。操作依据见 [平台手册](references/platforms.md)。
@@ -127,7 +133,9 @@ py -3 -m venv .venv
 - 规则排序分不是录用概率。通勤、单双休、转行接受度等自由文本要求，仍需人工核实。
 - 新计划按查询规模与目标数量生成独立预算；普通每平台 5 岗默认 6 个结果页、30 次详情尝试，分批使用，达标即停。旧计划及用户指定上限原样保留，扩容须确认。报告区分尝试与成功读取，核对两类预算再判断能否结束，详见 [浏览预算](references/budget.md)。
 - 默认单 Agent 串行。模型 429 暂停整轮调用；招聘平台 HTTP 429 只停止该平台。页面置空时保留已取得的证据，按状态暂停或恢复，不保证冷却后一定可用。
-- 目前未完成五个平台登录后的完整在线验收；离线回归通过不代表平台持续可用，也不保证岗位仍在招聘。
+- 目前未完成全部渠道的完整在线验收；离线回归通过不代表平台持续可用，也不保证岗位仍在招聘。
+
+本地宝城市路线来自官方城市导航，收录 379 个地区首页；未收录或歧义地区从城市导航核对，不猜地址。该数字不代表全部城市招聘功能已实测。新渠道均为 Agent 界面流程，已有计划不自动扩大范围。详见 [本地渠道操作](references/local-sources.md) 与 [入口核验记录](references/source-verification.md)。
 
 ## 隐私与开发
 
@@ -159,7 +167,7 @@ node --test tests/test_collect.cjs tests/test_page_state.cjs
 
 ### 跨平台与系统支持验证到哪一步？
 
-需要 Python 3.10+ 和 Tabbit 稳定 CLI。目前实机覆盖 macOS arm64，Windows/Linux 与五平台登录后的完整在线流程仍有未验证项。
+需要 Python 3.10+ 和 Tabbit 稳定 CLI。目前实机覆盖 macOS arm64，Windows/Linux 与全部渠道的完整在线流程仍有未验证项。
 
 <a id="english-overview"></a>
 
@@ -167,7 +175,7 @@ node --test tests/test_collect.cjs tests/test_page_state.cjs
 
 Job Search is a job search Agent Skill that turns confirmed criteria into source-backed HTML, Excel and JSON job lists. It keeps source links, collection times, matching reasons and unresolved fields. It does not apply for jobs, contact recruiters or upload a resume automatically.
 
-See [installation](#quick-start). Python 3.10+ and Tabbit's stable CLI are required. Directions inferred from a resume require confirmation. Full logged-in acceptance across all five recruitment platforms and end-to-end Windows/Linux validation remain incomplete.
+See [installation](#quick-start). Python 3.10+ and Tabbit's stable CLI are required. Directions inferred from a resume require confirmation. Full logged-in acceptance across all supported recruitment channels and end-to-end Windows/Linux validation remain incomplete.
 
 ## 改名与兼容
 

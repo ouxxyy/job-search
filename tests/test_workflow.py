@@ -14,15 +14,17 @@ from test_core import job, plan
 
 def jobs_for(platform, number, **kw):
     home=PLATFORMS[platform]['home']
+    if PLATFORMS[platform].get('listing_check'):
+        kw={'recruitment_status':'open','recruitment_evidence':'合成测试：页面显示正在招聘',**kw}
     return [job(platform=platform,id=f'{platform}-{i}',source_url=home,link=home+'job/'+str(i),**kw) for i in range(number)]
 
 class WorkflowTests(unittest.TestCase):
-    def test_default_five_platforms_five_each(self):
+    def test_default_six_platforms_five_each(self):
         p=validate_plan({'keywords':['采购专员'],'cities':['苏州']})
-        self.assertEqual(set(p['platforms']),{'boss','liepin','maimai','zhaopin','51job'})
+        self.assertEqual(set(p['platforms']),{'boss','liepin','maimai','zhaopin','51job','bendibao'})
         a=next_actions(p,[],{})
-        self.assertEqual(a['target_total'],25)
-        self.assertEqual(len(a['needs_agent']),5)
+        self.assertEqual(a['target_total'],30)
+        self.assertEqual(len(a['needs_agent']),6)
         self.assertTrue(all(r['target']==5 for r in a['platforms']))
         self.assertFalse(a['can_deliver_final'])
     def test_platform_quotas_independent(self):
@@ -55,12 +57,12 @@ class WorkflowTests(unittest.TestCase):
         s={k:{'status':'ok' if k in ('boss','liepin') else 'guided_pending'} for k in p['platforms']}
         a=next_actions(p,rows,s)
         self.assertFalse(a['complete']);self.assertFalse(a['can_deliver_final'])
-        self.assertEqual(set(a['needs_agent']),{'maimai','zhaopin','51job'})
-    def test_all_five_targets_met(self):
+        self.assertEqual(set(a['needs_agent']),{'maimai','zhaopin','51job','bendibao'})
+    def test_all_six_targets_met(self):
         p=validate_plan({'keywords':['财务分析师'],'cities':['上海']})
         raw=[j for k in p['platforms'] for j in jobs_for(k,5)]
         a=next_actions(p,build_report(raw,p),{k:{'status':'ok'} for k in p['platforms']})
-        self.assertTrue(a['complete']);self.assertTrue(a['can_deliver_final']);self.assertEqual(a['qualified_total'],25)
+        self.assertTrue(a['complete']);self.assertTrue(a['can_deliver_final']);self.assertEqual(a['qualified_total'],30)
     def test_only_recorded_shortfall_allows_partial_delivery(self):
         p=plan();rows=build_report(jobs_for('boss',2),p)
         s={k:{'status':'ok'} for k in p['platforms']}
@@ -83,7 +85,7 @@ class WorkflowTests(unittest.TestCase):
             args=['job_scout.py','plan','--keyword','会计','--city','上海','--count','8','--platform-count','boss=10','--out',str(out)]
             with patch.object(sys,'argv',args),patch('builtins.print'):self.assertEqual(job_scout.main(),0)
             p=json.loads(out.read_text());self.assertEqual(p['jobs_per_platform'],8);self.assertEqual(p['platform_job_counts'],{'boss':10})
-            self.assertEqual(p['shortlist_limit'],42)
+            self.assertEqual(p['shortlist_limit'],50)
     def test_signed_out_public_page_prompts_before_scan(self):
         with tempfile.TemporaryDirectory() as t:
             p=plan(platforms=['zhaopin']);path=Path(t)/'plan.json';path.write_text(json.dumps(p))

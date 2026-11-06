@@ -35,3 +35,22 @@ test('generic download app promotion does not prove app-only jobs',()=>{
 test('captcha visible requires verification even with logged in account',()=>{
  const s=state({text:'请完成安全验证',controls:[el('退出登录')]});assert.equal(s.status,'blocked');
 });
+test('public recruitment navigation is readable without claiming signed in',()=>{
+ for(const url of ['https://gz.bendibao.com/job/','https://www.iguopin.com/','http://job.mohrss.gov.cn/','https://www.ncss.cn/']){
+  const s=state({url,controls:[el('职位查询',{href:'/jobs/'})]});
+  assert.equal(s.status,'ready');assert.equal(s.login,'unknown');assert.equal(s.public_access,true);
+ }
+});
+test('public portals still stop at a real login wall or captcha',()=>{
+ const controls=[el('职位查询',{href:'/jobs/'})];
+ assert.equal(state({url:'https://gz.bendibao.com/job/',controls,dialogs:[el('验证码登录')],inputs:[el('',{placeholder:'手机号'})]}).status,'login_required');
+ assert.equal(state({url:'https://www.iguopin.com/',controls,text:'请完成安全验证'}).status,'blocked');
+});
+test('Bendibao recruiter form is not a candidate search page',()=>{
+ const s=state({url:'https://m.hz.bendibao.com/job/recruit',text:'快速免费招聘通道',controls:[el('职位',{href:'/job/'})]});
+ assert.equal(s.status,'wrong_context');assert.equal(s.public_access,false);
+});
+test('lookalike source domains do not get public portal readiness',()=>{
+ const s=state({url:'https://bendibao.com.evil.invalid/',controls:[el('职位',{href:'/job/'})]});
+ assert.equal(s.status,'needs_inspection');assert.equal(s.public_access,false);
+});

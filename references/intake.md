@@ -18,12 +18,12 @@
 
 `keywords`：已确认岗位搜索词，任意行业；`cities`：城市名或显式“全国”；`salary_min_k/max_k`：税前月薪 K，未知 null；`experience_years`：用户可证明的工作年限；`education`：用户学历；`employment_types/industries/company_sizes`：允许项列表，空代表不限；`must_keywords`：全部必需命中，字段证据不完整时待核实；`plus_keywords`：偏好加分；`avoid_keywords`：用户明确排除的文本；`extra_requirements`：无法自动判断的具体要求，始终进入人工核实。
 
-默认覆盖 BOSS、猎聘、脉脉、智联、前程无忧，每个平台 `jobs_per_platform=5`；`platform_job_counts` 可单独覆盖，例如 `{"boss":10,"maimai":3}`。禁止自动收缩到两个平台。
+新计划默认覆盖 BOSS、猎聘、脉脉、智联、前程无忧和目标地区本地宝，每个平台 `jobs_per_platform=5`；`platform_job_counts` 可单独覆盖，例如 `{"boss":10,"maimai":3}`。禁止自动收缩到两个平台。
 
 默认 `fresh_days=60`、`active_days=7`、`require_active=false`、`unknown_policy=review`。严格活跃筛选可以设 `require_active=true`，活跃时间未知时待核实；`unknown_policy=exclude` 才把未知硬条件排除。所有默认值在确认摘要中展示，不隐藏。
 
 ## 确認摘要模板
 
-> 本轮搜：财务分析师；上海；月薪 15–30K；4 年经验、本科。近 60 天发布，优先近 7 天活跃的 HR；发布时间不明或薪资跨越底线的单列待核实。平台：BOSS、猎聘、脉脉、智联、前程无忧；各 5 个符合条件岗位。每平台最多 6 个结果页、30 次详情尝试，分批使用、达标即停。其他岗位方向暂不搜。请确认或修改条件；我会先检查现有标签，遇到真实登录墙再提示登录。
+> 本轮搜：财务分析师；上海；月薪 15–30K；4 年经验、本科。近 60 天发布，优先近 7 天活跃的 HR；发布时间不明或薪资跨越底线的单列待核实。平台：BOSS、猎聘、脉脉、智联、前程无忧、本地宝；各 5 个符合条件岗位。每平台最多 6 个结果页、30 次详情尝试，分批使用、达标即停。其他岗位方向暂不搜。请确认或修改条件；我会先检查现有标签，遇到真实登录墙再提示登录。
 
 确认后执行；已经确认相同完整计划则直接执行。程序 digest 只能防止误用旧配置，不能代替人类确认。

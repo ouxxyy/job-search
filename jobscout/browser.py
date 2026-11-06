@@ -139,7 +139,7 @@ def inventory(task):
     raise TabbitError('INVENTORY_INCOMPLETE：停止分页，保留已有标签。')
 
 
-def platform_tabs(tabs, platform):
+def platform_tabs(tabs, platform, entry_url=None):
     domain = PLATFORMS[platform]['host']
     def matches(tab):
         try:
@@ -148,14 +148,20 @@ def platform_tabs(tabs, platform):
         except ValueError: return False
     def priority(tab):
         u = urlsplit(tab['url'])
-        employer = u.hostname == 'lpt.liepin.com' or '/web/boss/' in u.path or u.path.startswith('/ent/')
+        employer = u.hostname in ('lpt.liepin.com', 'u.bendibao.com') or '/web/boss/' in u.path or u.path.startswith('/ent/') or u.path.rstrip('/') == '/job/recruit'
         jobs = any(x in u.path for x in ('/web/geek/jobs', '/web/geek/job', '/zhaopin/', '/jobs/', '/pc/search'))
-        return (employer, not jobs, not tab.get('active', False), str(tab['tabId']))
+        target_host = urlsplit(entry_url or '').hostname if platform == 'bendibao' else None
+        station_match = target_host and u.hostname in (target_host, 'm.' + target_host)
+        return (employer, not station_match, not jobs, not tab.get('active', False), str(tab['tabId']))
     return sorted((t for t in tabs if matches(t)), key=priority)
 
 
-def inspect(task, platform, *, existing_only=False):
-    candidates = platform_tabs(inventory(task), platform)
+def inspect(task, platform, *, existing_only=False, entry_url=None):
+    from .core import safe_url
+    entry_url = entry_url or PLATFORMS[platform]['home']
+    if not safe_url(entry_url, platform):
+        raise ValueError('预检入口必须属于对应平台')
+    candidates = platform_tabs(inventory(task), platform, entry_url)
     available = [t for t in candidates if t.get('state') in ('available', 'owned')]
     if candidates and not available:
         return {'platform':platform,'status':'browser_busy','login':'unknown',
@@ -192,10 +198,10 @@ def inspect(task, platform, *, existing_only=False):
         return min(checked, key=lambda s: priority.index(s['status']) if s['status'] in priority else -1)
     if existing_only:
         return {'platform':platform,'status':'needs_inspection','login':'unknown',
-                'url':PLATFORMS[platform]['home'],'reused_tab':False,
+                'url':entry_url,'reused_tab':False,
                 'note':'当前没有可读的同平台现有标签；只读核验不新开页面。'}
     # Only when a complete inventory proves no same-platform tab exists, open one scratch page.
-    js = 'const readState = '+STATE_JS+';\nconst url = '+json.dumps(PLATFORMS[platform]['home'])+';\n'+r"""
+    js = 'const readState = '+STATE_JS+';\nconst url = '+json.dumps(entry_url)+';\n'+r"""
 const p = await context.newPage();
 try {
  await p.goto(url,{waitUntil:'domcontentloaded',timeout:25000});

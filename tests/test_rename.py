@@ -26,7 +26,9 @@ class RenameCompatibilityTests(unittest.TestCase):
                 out=Path(d)/(script+'.json')
                 p=subprocess.run([sys.executable,str(ROOT/script),'plan','--keyword','财务分析师','--city','上海','--out',str(out)],cwd=d,capture_output=True,text=True)
                 self.assertEqual(p.returncode,0,p.stderr)
-                values.append(json.loads(p.stdout))
+                receipt=json.loads(p.stdout)
+                self.assertTrue(Path(receipt.pop('routes_file')).is_file())
+                values.append(receipt)
             self.assertEqual(values[0],values[1])
 
     def test_both_cli_reject_wrong_confirmation_before_browser(self):
@@ -76,6 +78,8 @@ class RenameCompatibilityTests(unittest.TestCase):
                 self.assertTrue(all(n.startswith('job-search/') for n in names))
                 self.assertIn('job-search/job_search.py',names)
                 self.assertIn('job-search/job_scout.py',names)
+                self.assertIn('job-search/jobscout/sources.py',names)
+                self.assertIn('job-search/data/bendibao_cities.json',names)
                 self.assertFalse(any('/.venv/' in n or '/private/' in n for n in names))
                 z.extractall(Path(d)/'extracted')
             base=Path(d)/'extracted/job-search'
@@ -83,6 +87,10 @@ class RenameCompatibilityTests(unittest.TestCase):
                 result=subprocess.run([sys.executable,str(base/script),'--help'],cwd=d,capture_output=True,text=True)
                 self.assertEqual(result.returncode,0,result.stderr)
                 self.assertIn('usage: job-search',result.stdout)
+            result=subprocess.run([sys.executable,str(base/'job_search.py'),'plan','--keyword','电工','--city','苏州','--out',str(Path(d)/'plan.json')],cwd=d,capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            routes=json.loads((Path(d)/'plan.routes.json').read_text())
+            self.assertEqual(routes['platforms']['bendibao'][0]['entry_url'],'http://suzhou.bendibao.com/')
 
     def test_public_report_brand_changes_but_mark_storage_key_stays(self):
         html=(ROOT/'assets/report.html').read_text()

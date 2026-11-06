@@ -58,3 +58,23 @@
 ## 状态分层（0.2.2）
 
 `wrong_context`（招聘方页面）、`browser_busy`（标签被占用）、`browser_error`、`access_denied` 均先交给 Agent 核实，不自动要求用户登录。`model_rate_limited/host_rate_limited` 暂停整轮执行，`platform_rate_limited` 只暂停实际返回 HTTP429 的网站；下一步用 paused/execution_paused/deferred_until_resume 表示，不能以切换平台继续绕开。Codex 回合外的模型错误需由宿主/恢复后的 Agent 记录，脚本无法保证捕获。
+
+## 公告与原始来源（v0.3.0）
+
+新增平台 ID：`bendibao/guopin/public_jobs/ncss`。`link/source_url` 仍限定对应平台，跨站原文只放 `original_url`，不能改写成平台域名。新增字段均可缺省，不改变旧平台岗位的历史判定；新四渠道缺少当前在招证据进入待核实。
+
+| 字段 | 口径 |
+|---|---|
+| `source_kind` | `job`（默认）/ `announcement`；公告按实际岗位拆分 |
+| `source_publish_time` | 转载页发布时间，不能代替 `publish_time` |
+| `recruitment_status` | `unknown`（默认）/ `open` / `closed` / `not_started` |
+| `recruitment_evidence` | 判断当前招聘状态的实际原文；非 unknown 必填 |
+| `deadline` / `deadline_at` | 截止原文 / 明确的 ISO 日期或带时区时间；日期包含当天，过期排除 |
+| `original_url` | 页面实际出现且经核对的用人单位/主管部门原文 HTTP(S) 链接；只做 URL 安全校验，不自动认证网站身份 |
+| `original_evidence` / `original_captured_at` | 实际读取原文与带时区采集时间；公告缺失则待核实 |
+| `eligibility_status` | `unknown`（默认）/ `matched` / `unmatched`；公告需核实硬资格 |
+| `eligibility_evidence` | 资格原文与用户已提供事实的对照；有判断就必填 |
+
+同公告多岗位优先使用公告号＋岗位代码作为 ID；无 ID 时按公告链接、单位、岗位名和实际城市区分，避免同链接吞掉多个职位。
+
+状态新增可选 `original_detail_urls`：实际访问过的跨站原公告 HTTP(S) 链接；与本平台 `detail_urls` 合并去重后的数量不得超过 `details_attempted`。worklist 对尚未尝试的公告原文给 `detail_queue[].source=original`，这次读取也消耗同一平台的详情预算。`search_routes` 只供执行指引，不表示已检索、已确认或数量达标。

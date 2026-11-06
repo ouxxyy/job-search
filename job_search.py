@@ -11,6 +11,7 @@ import time
 from jobscout.core import DEFAULTS, PLATFORMS, build_report, digest, safe_url, validate_plan, target_count
 from jobscout.report import write_report
 from jobscout.workflow import login_prompt, write_actions
+from jobscout.sources import query_routes, search_routes
 
 ROOT=Path(__file__).resolve().parent
 
@@ -52,12 +53,15 @@ def validate_statuses(raw, p):
                 raise ValueError(field+' 必须为非负整数')
         if 'details_read' in s and s['details_read'] > s.get('details_attempted', 0):
             raise ValueError('details_read 不能超过 details_attempted')
-        if 'detail_urls' in s:
-            urls=s['detail_urls']
-            if not isinstance(urls,list) or any(not isinstance(u,str) or not safe_url(u,k) for u in urls):
-                raise ValueError('detail_urls 必须是本平台已尝试详情链接数组')
-            if len(set(urls)) > s.get('details_attempted',0):
-                raise ValueError('detail_urls 数量不能超过 details_attempted')
+        visited=set()
+        for field in ('detail_urls','original_detail_urls'):
+            if field not in s:continue
+            urls=s[field]
+            if not isinstance(urls,list) or any(not isinstance(u,str) or not safe_url(u,k if field=='detail_urls' else None) for u in urls):
+                raise ValueError(field+' 必须是已尝试的 HTTP(S) 详情链接数组；detail_urls 限本平台')
+            visited.update(safe_url(u) for u in urls)
+        if len(visited) > s.get('details_attempted',0):
+            raise ValueError('详情链接去重总数不能超过 details_attempted')
         if 'queries' in s:
             queries=s['queries']
             if not isinstance(queries,list) or any(not isinstance(q,dict) or type(q.get('pages')) is not int or q['pages'] < 0 for q in queries):
@@ -94,6 +98,8 @@ def main():
     sub=ap.add_subparsers(dest='cmd',required=True)
     sub.add_parser('platforms',help='查看平台能力与入口')
     sub.add_parser('doctor',help='只检查本机依赖，不打开平台')
+    routes=sub.add_parser('routes',help='生成按已确认城市和岗位划分的渠道入口，不访问网络')
+    routes.add_argument('--plan',required=True);routes.add_argument('--out',required=True)
     prepare=sub.add_parser('plan',help='规范化条件，输出待确认计划摘要；不访问浏览器')
     prepare.add_argument('--input');prepare.add_argument('--keyword',action='append');prepare.add_argument('--city',action='append')
     prepare.add_argument('--platforms');prepare.add_argument('--out',required=True)
@@ -145,10 +151,19 @@ def main():
         if args.pages is not None:raw['max_pages_per_platform']=args.pages
         if args.details is not None:raw['max_details_per_platform']=args.details
         p=validate_plan(raw);save(args.out,p)
-        print(json.dumps({'plan':p,'confirmation_id':digest(p),'next':'向用户展示条件、建议方向、未知值策略与平台；收到明确确认后才 scan --confirm 此 ID。计划有变须重新确认。'},ensure_ascii=False,indent=2));return 0
+        routes_file=Path(args.out).with_suffix('.routes.json')
+        if routes_file == Path(args.out):
+            routes_file=Path(str(args.out)+'.routes.json')
+        save(routes_file,search_routes(p))
+        print(json.dumps({'plan':p,'confirmation_id':digest(p),'routes_file':str(routes_file),'next':'向用户展示条件、建议方向、未知值策略与平台；收到明确确认后才 scan --confirm 此 ID。计划有变须重新确认。'},ensure_ascii=False,indent=2));return 0
     if args.cmd=='demo':
         print(json.dumps(report_receipt(demo(args.out),args.out,args.verbose),ensure_ascii=False,indent=2));return 0
     p=plan_at(args.plan)
+    if args.cmd=='routes':
+        if Path(args.out).expanduser().resolve()==Path(args.plan).expanduser().resolve():
+            raise ValueError('路线输出不能覆盖输入计划；请指定不同文件')
+        save(args.out,search_routes(p))
+        print(json.dumps({'out':str(Path(args.out).expanduser().resolve()),'plan_digest':digest(p),'platforms':p['platforms']},ensure_ascii=False));return 0
     if args.cmd in ('report','worklist'):
         jobs=[]
         for file in args.input:
@@ -185,12 +200,13 @@ def run_browser(args,p,selected):
         raise ValueError('此目录已有采集结果，请使用新目录；通过 report 合并，避免覆盖之前的岗位')
     task='Job Search '+dt.datetime.now().strftime('%m%d-%H%M%S')
     statuses={};all_jobs=[];transport_failed=False
+    save(out/'search-routes.json',search_routes(p))
     print('本轮平台与目标：'+ '；'.join(f'{PLATFORMS[k]["name"]} {target_count(p,k)} 个' for k in selected),flush=True)
     try:
         for index,platform in enumerate(selected):
             if index:time.sleep(random.uniform(5,8))
             try:
-                state=browser.inspect(task,platform)
+                state=browser.inspect(task,platform,entry_url=query_routes(p,platform)[0]['entry_url']) if platform=='bendibao' else browser.inspect(task,platform)
                 if state.get('login')=='signed_out' and state['status'] in ('ready','needs_inspection'):
                     state['status']='login_required'
                 statuses[platform]={**state,'jobs':0}
@@ -200,7 +216,7 @@ def run_browser(args,p,selected):
                     statuses[platform].update(note=message,requires_user_action=True)
                     print('\n【需要用户登录】'+message+'\n',flush=True)
                 elif state.get('login')=='unknown':
-                    print(f'【登录待确认】{PLATFORMS[platform]["name"]} 尚未确认登录状态；发现登录墙立即提示，不能假定已登录。',flush=True)
+                    print(f'【访问检查】{PLATFORMS[platform]["name"]} 身份未知；公开页面可继续读取，只有实际登录墙才提示登录。',flush=True)
                 if args.cmd=='preflight':continue
                 blockers=('login_required','blocked','app_required','wrong_context','browser_busy','access_denied','model_rate_limited','host_rate_limited','platform_rate_limited')
                 # Automatic platforms: a scratch inspection page blanked by the

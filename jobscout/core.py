@@ -16,10 +16,14 @@ PLATFORMS = {
     '51job': {'name': '前程无忧', 'home': 'https://www.51job.com/', 'mode': 'guided', 'host': '51job.com'},
     'yupao': {'name': '鱼泡直聘', 'home': 'https://www.yupao.com/', 'mode': 'guided', 'host': 'yupao.com'},
     'shixiseng': {'name': '实习僧', 'home': 'https://www.shixiseng.com/', 'mode': 'guided', 'host': 'shixiseng.com'},
+    'bendibao': {'name': '本地宝', 'home': 'https://www.bendibao.com/', 'mode': 'guided', 'host': 'bendibao.com', 'listing_check': True},
+    'guopin': {'name': '国聘', 'home': 'https://www.iguopin.com/', 'mode': 'guided', 'host': 'iguopin.com', 'listing_check': True},
+    'public_jobs': {'name': '中国公共招聘网', 'home': 'http://job.mohrss.gov.cn/', 'mode': 'guided', 'host': 'job.mohrss.gov.cn', 'listing_check': True},
+    'ncss': {'name': '国家大学生就业服务平台', 'home': 'https://www.ncss.cn/', 'mode': 'guided', 'host': 'ncss.cn', 'listing_check': True},
 }
 DEFAULTS = {
     'version': 1, 'mode': 'custom', 'keywords': [], 'cities': [],
-    'platforms': ['boss', 'liepin', 'zhaopin', '51job', 'maimai'],
+    'platforms': ['boss', 'liepin', 'zhaopin', '51job', 'maimai', 'bendibao'],
     'salary_min_k': None, 'salary_max_k': None, 'fresh_days': 60,
     'active_days': 7, 'unknown_policy': 'review', 'require_active': False,
     'must_keywords': [], 'plus_keywords': [], 'avoid_keywords': [],
@@ -163,7 +167,20 @@ def safe_url(value, platform=None):
 
 STR_FIELDS = ('title', 'company', 'salary', 'city', 'district', 'experience', 'degree',
               'industry', 'scale', 'employment_type', 'description', 'publish_time', 'refresh_time',
-              'hr_active', 'hr_reply', 'link', 'source_url', 'captured_at', 'evidence', 'id')
+              'hr_active', 'hr_reply', 'link', 'source_url', 'captured_at', 'evidence', 'id',
+              'source_kind', 'source_publish_time', 'original_url', 'original_evidence', 'original_captured_at',
+              'deadline', 'deadline_at', 'recruitment_status', 'recruitment_evidence',
+              'eligibility_status', 'eligibility_evidence')
+
+def deadline_end(value):
+    """Only explicit ISO dates/times; a date-only deadline includes that local day."""
+    tz = dt.timezone(dt.timedelta(hours=8))
+    if re.fullmatch(r'\d{4}-\d{2}-\d{2}', value):
+        return dt.datetime.combine(dt.date.fromisoformat(value), dt.time.max, tzinfo=tz)
+    parsed = dt.datetime.fromisoformat(value)
+    if parsed.tzinfo is None:
+        raise ValueError('deadline_at 时间必须包含时区')
+    return parsed
 
 def normalize_job(raw):
     if not isinstance(raw, dict) or raw.get('platform') not in PLATFORMS:
@@ -186,6 +203,34 @@ def normalize_job(raw):
     for k in ('link', 'source_url'):
         if j[k] and not safe_url(j[k], j['platform']):
             raise ValueError(f'{k} 必须是对应平台的 HTTP(S) 链接')
+    # An originating employer/authority may be outside the discovery platform.
+    # This explicit provenance field never relaxes source_url/link validation.
+    if j['original_url'] and not safe_url(j['original_url']):
+        raise ValueError('original_url 必须是 HTTP(S) 原始公告链接')
+    for field, default, choices in (
+            ('source_kind', 'job', ('job', 'announcement')),
+            ('recruitment_status', 'unknown', ('unknown', 'open', 'closed', 'not_started')),
+            ('eligibility_status', 'unknown', ('unknown', 'matched', 'unmatched'))):
+        j[field] = j[field] or default
+        if j[field] not in choices:
+            raise ValueError(f'{field} 不支持此取值')
+    if j['recruitment_status'] != 'unknown' and not j['recruitment_evidence'].strip():
+        raise ValueError('招聘状态需要 recruitment_evidence 原文')
+    if j['eligibility_status'] != 'unknown' and not j['eligibility_evidence'].strip():
+        raise ValueError('报考资格判断需要 eligibility_evidence 对照依据')
+    if j['original_captured_at']:
+        try:
+            if dt.datetime.fromisoformat(j['original_captured_at']).tzinfo is None:
+                raise ValueError()
+        except ValueError:
+            raise ValueError('original_captured_at 必须是带时区 ISO 日期')
+    if j['deadline_at']:
+        try:
+            deadline_end(j['deadline_at'])
+        except ValueError:
+            raise ValueError('deadline_at 必须为 YYYY-MM-DD 或带时区 ISO 时间')
+        if not j['deadline'].strip():
+            raise ValueError('deadline_at 需要 deadline 中的报名截止原文依据')
     if not j['source_url'] or not j['captured_at'] or not j['evidence']:
         raise ValueError('岗位需要 source_url、captured_at、evidence 原文依据')
     try:
@@ -195,7 +240,10 @@ def normalize_job(raw):
     except ValueError:
         raise ValueError('captured_at 必须是带时区 ISO 日期')
     j['salary_display'] = j['salary'] or '薪资未披露'
-    j['key'] = hashlib.sha256((j['platform'] + '|' + (j['id'] or j['link'] or j['company'] + j['title'] + j['city'])).encode()).hexdigest()[:18]
+    identity = j['id'] or j['link'] or j['company'] + j['title'] + j['city']
+    if j['source_kind'] == 'announcement' and not j['id']:
+        identity = '|'.join((j['link'], j['company'], j['title'], j['city']))
+    j['key'] = hashlib.sha256((j['platform'] + '|' + identity).encode()).hexdigest()[:18]
     return j
 
 def evidence_age(value, captured_at):
@@ -210,6 +258,30 @@ def rank_job(j, p):
     j = copy.deepcopy(j)
     reasons, unknown, rejected = [], [], []
     score = 0
+    now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
+    if j['recruitment_status'] == 'closed':
+        rejected.append('招聘已结束或岗位已下架')
+    elif j['recruitment_status'] == 'not_started':
+        unknown.append('报名尚未开始')
+    elif PLATFORMS[j['platform']].get('listing_check') and j['recruitment_status'] == 'unknown':
+        unknown.append('当前招聘状态待核实')
+    if j['deadline_at'] and deadline_end(j['deadline_at']) < now:
+        rejected.append('报名截止时间已过')
+    elif j['deadline'] and not j['deadline_at']:
+        unknown.append('报名截止时间未能确定，需人工核实')
+    if j['source_kind'] == 'announcement':
+        if not j['deadline']:
+            unknown.append('公告报名截止时间未知')
+        if not (j['original_url'] and j['original_evidence'].strip() and j['original_captured_at']):
+            unknown.append('需回溯用人单位或主管部门原公告')
+        elif dt.datetime.fromisoformat(j['original_captured_at']) > now:
+            unknown.append('原公告采集时间在未来，需核实')
+        if j['recruitment_status'] == 'unknown' and not PLATFORMS[j['platform']].get('listing_check'):
+            unknown.append('当前招聘状态待核实')
+        if j['eligibility_status'] == 'unknown':
+            unknown.append('公告报考资格待核实（专业、届别、年龄等）')
+    if j['eligibility_status'] == 'unmatched':
+        rejected.append('报考资格不符合：' + j['eligibility_evidence'])
     blob = ' '.join(str(j.get(k, '')) for k in ('title', 'company', 'description', 'industry', 'employment_type')) + ' '.join(j['skills'] + j['labels'])
     blob = blob.casefold()
     if any(k.casefold() in j['title'].casefold() for k in p['keywords']):

@@ -1,6 +1,6 @@
 {
   "name": "job-search",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AI岗位搜索大师：按求职条件筛选招聘信息，整理带来源证据的 HTML、Excel 与 JSON 投递短名单",
   "author": {
     "name": "欧八同学 (ouxxyy)",
