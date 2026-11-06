@@ -8,8 +8,11 @@
   ],
   "platforms": [
     "boss",
+    "liepin",
     "zhaopin",
-    "51job"
+    "51job",
+    "maimai",
+    "bendibao"
   ],
   "salary_min_k": 8,
   "fresh_days": 60,
