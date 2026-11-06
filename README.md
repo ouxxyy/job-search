@@ -2,6 +2,8 @@
 
 > 📦 **本项目属于 [ouba-classmate 套件](https://github.com/ouxxyy/ouba-classmate)**：[一行安装全部 Skill](https://github.com/ouxxyy/ouba-classmate#install) · [查看《中文 AI 求职 Skill 公开横评》](https://github.com/ouxxyy/ouba-classmate/tree/main/benchmark)
 
+[![AgentShield Security](https://merx.help/badge/A+.svg)](https://merx.help/shield)
+
 **把求职条件，整理成一份有来源、有理由、能逐条核实的投递短名单。**
 
 找工作时，麻烦的往往不是搜不到岗位，而是开了几个招聘网站，仍要一条条比薪资、看发布日期、记下哪里还缺信息。我做了这个 Skill，让 Agent 按你确认的条件去找，把结果放进同一份 HTML 和 Excel。你决定投哪些，它不会代投或联系 HR。
