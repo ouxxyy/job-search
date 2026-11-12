@@ -1,6 +1,9 @@
 # AI岗位搜索大师（job-search）｜求职岗位筛选与招聘信息整理 Agent Skill
 
-> 📦 **本项目属于 [ouba-classmate 套件](https://github.com/ouxxyy/ouba-classmate)**：[一行安装全部 Skill](https://github.com/ouxxyy/ouba-classmate#install) · [查看《中文 AI 求职 Skill 公开横评》](https://github.com/ouxxyy/ouba-classmate/tree/main/benchmark)
+> ⭐ **旗舰合集入口：本项目已收录于 [`ouxxyy/ouba-classmate`](https://github.com/ouxxyy/ouba-classmate)** [![GitHub Repo stars](https://img.shields.io/github/stars/ouxxyy/ouba-classmate?style=flat-square&logo=github&label=ouba-classmate%20Stars&color=0284c7)](https://github.com/ouxxyy/ouba-classmate)
+> - 🚀 **建议直接前往 [合集主仓 `ouba-classmate` 点 Star 收藏](https://github.com/ouxxyy/ouba-classmate)**：[一行安装全部 Skill](https://github.com/ouxxyy/ouba-classmate#install) · [查看《中文 AI 求职 Skill 公开横评》](https://github.com/ouxxyy/ouba-classmate/tree/main/benchmark)
+> - 🛡️ **免安装求职防身与自测**：[《2026 求职防身情报库：24道大厂深挖母题 × JD黑话解码 × 接Offer背调18问》](https://github.com/ouxxyy/ouba-classmate/blob/main/radar/README.md) · [⚡ 30秒在线速测：岗位 AI 不可替代指数 & 简历含金量诊断小票](https://ouxxyy.github.io/ouba-classmate/#career-radar)
+> - 💻 **终端 1 秒为开源主仓点亮 Star**：`gh api -X PUT /user/starred/ouxxyy/ouba-classmate`
 
 **把求职条件，整理成一份有来源、有理由、能逐条核实的投递短名单。**
 
