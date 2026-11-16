@@ -1,13 +1,28 @@
 # AI岗位搜索大师（job-search）｜求职岗位筛选与招聘信息整理 Agent Skill
 
+<!-- discovery:start -->
+## 中文 AI 求职岗位搜索与招聘信息筛选
+
+**怎样按城市、薪资和发布日期筛选招聘岗位？** 先确认求职条件，再通过可访问的招聘来源整理 HTML、Excel、JSON 岗位清单，保留来源、日期依据和待核实项。
+
+Chinese job search agent and source-backed job hunting shortlist.
+
+**开始使用：** [安装与首次搜索](#quick-start) · [查看输入输出示例](#quick-example)。
+
+**使用边界：** 发布时间与刷新时间分开记录；登录、验证码和平台访问限制可能影响覆盖，未核实岗位不充作有效短名单，不代投或联系 HR。
+
+[按任务浏览欧八同学的全部工具](https://github.com/ouxxyy/ouba-classmate#按需求找)；如果本项目有帮助，欢迎收藏当前仓库。
+
+<!-- discovery:end -->
+
 <!-- hero:start -->
 
 <p>
   <a href="https://github.com/ouxxyy/ouba-classmate"><img src="assets/hero-card.svg" width="100%" alt="job-search — 5 平台实时去重抓取与岗位短名单"></a>
 </p>
 
-**用一句话描述目标城市、薪资带与公司阶段，自动扫描 5 个招聘平台并按匹配度去重整理出带来源的 HTML、Excel 与 JSON 投递短名单。**  
-<sub>Natural-language job radar scanning 5 platforms, deduplicating openings, and exporting ranked source-backed HTML, Excel, and JSON shortlists.</sub>
+**用一句话描述目标城市、薪资带与公司阶段，按确认条件查询可访问的招聘平台和本地招聘来源，去重整理出带来源与待核实项的 HTML、Excel 与 JSON 投递短名单。**<br>
+<sub>Chinese job search agent checking accessible recruitment sources and exporting evidence-backed HTML, Excel and JSON shortlists; unverified listings remain separate.</sub>
 
 <p>
   <a href="https://github.com/ouxxyy/ouba-classmate"><img src="https://img.shields.io/badge/SUITE-ouba--classmate-1f6feb?style=for-the-badge" alt="ouba-classmate Suite"></a>
