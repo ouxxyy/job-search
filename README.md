@@ -7,12 +7,15 @@
 
 Chinese job search agent and source-backed job hunting shortlist.
 
+**30 秒核心结论：** 覆盖 5 大中文招聘平台（BOSS直聘/猎聘/脉脉/智联/51job） · 去重短名单带原始来源 URL · 横评 10/12 分 · MIT 开源 0 元 · 更新于 2026-11-21。
+
+**一键安装 / 收藏：** `npx skills add ouxxyy/ouba-classmate --skill job-search` ｜ `claude plugin marketplace add ouxxyy/ouba-classmate` ｜ `gh api -X PUT /user/starred/ouxxyy/job-search`
+
 **开始使用：** [安装与首次搜索](#quick-start) · [查看输入输出示例](#quick-example)。
 
 **使用边界：** 发布时间与刷新时间分开记录；登录、验证码和平台访问限制可能影响覆盖，未核实岗位不充作有效短名单，不代投或联系 HR。
 
 [按任务浏览欧八同学的全部工具](https://github.com/ouxxyy/ouba-classmate#按需求找)；如果本项目有帮助，欢迎收藏当前仓库。
-
 <!-- discovery:end -->
 
 <!-- hero:start -->

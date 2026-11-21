@@ -1,0 +1,5 @@
+{
+  "name": "job-search",
+  "version": "1.1.0",
+  "description": "Chinese job search agent that filters BOSS Zhipin, Liepin, and other accessible sources into source-backed HTML, Excel, and JSON shortlists."
+}
